@@ -1,0 +1,117 @@
+require 'byebug'
+require_relative 'lisp_environment'
+
+class UtaLisp
+  def initialize
+    @global_env = add_globals(LispEnvironment.new)
+  end
+
+  def eval(x, env=@global_env)
+    if x.is_a?(String)
+      return env.find_env(x)[x] if env.find_env(x)
+    end
+    unless x.is_a?(Array)
+      return x
+    end
+
+    case x[0]
+    when 'quote', 'q'
+      x[1]
+    when 'atom?'
+      !eval(x[1], env).is_a?(Array)
+    when 'eq?'
+      v1 = eval(x[1], env)
+      v2 = eval(x[2], env)
+      !v1.is_a?(Array) && (v1 == v2)
+    when 'car'
+      eval(x[1], env)[0]
+    when 'cdr'
+      _first, *rest = eval(x[1], env)
+      rest
+    when 'cons'
+      [eval(x[1],env)] + [eval(x[2],env)]
+    when 'cond'
+      x[1..-1].each do |condition, exp|
+        return eval(condition,env) if eval(exp,env)
+      end
+    when 'null?'
+      eval(x[1],env) == []
+    when 'if' # (if test conseq alt)
+      _, test, conseq, alt = x
+      eval((eval(test, env) ? conseq : alt),env)
+    when 'set!'
+      var_in_env = env.find_env(x[1])[x[1]] if env.find_env(x[1])
+      var_in_env = eval(x[2],env)
+    when 'define'
+      env[x[1]] = eval(x[2],env)
+    when 'lambda'
+      _, vars, exp = x
+      lambda{ |*args| eval(exp, LispEnvironment.new(vars,args,env))}
+    when 'begin'
+      v = nil
+      x[1..-1].each do |expr|
+        v = eval(expr, env)
+      end
+      return v
+    else
+      expressions = x.map{ |expr| eval(expr,env) }
+      procedure = expressions.shift
+      procedure.call(*expressions)
+    end
+  end
+
+  def parse(s)
+    read_from(tokenize(s))
+  end
+
+  private
+
+  def tokenize(str)
+    str.gsub('(',' ( ')
+       .gsub(')',' ) ')
+       .split
+  end
+
+  def read_from(tokens)
+    raise 'unexpected EOF while reading' if tokens.length == 0
+    token = tokens.shift
+    case token
+    when '('
+      lisp_list = []
+      while tokens.first != ')'
+        lisp_list << read_from(tokens)
+      end
+      tokens.shift
+      lisp_list
+    when ')'
+      raise 'unexpected closing parenthesis )'
+    else
+      atom(token)
+    end
+  end
+
+  def atom(token)
+    Integer(token)
+  rescue ArgumentError
+    begin
+      Float(token)
+    rescue ArgumentError
+      token
+    end
+  end
+
+  def add_globals(env)
+    env.merge!({
+      '+' => lambda{ |a,b| a + b },
+      '-' => lambda{ |a,b| a - b },
+      '*' => lambda{ |a,b| a * b },
+      '/' => lambda{ |a,b| a / b },
+      '>' => lambda{ |a,b| a > b },
+      '<' => lambda{ |a,b| a < b },
+      '>=' => lambda{ |a,b| a >= b },
+      '<=' => lambda{ |a,b| a <= b },
+      '=' => lambda{ |a,b| a == b }
+    })
+    env.merge!({'True' => true, 'False' => false})
+  end
+end
