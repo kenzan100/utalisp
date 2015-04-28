@@ -22,7 +22,11 @@ end
 
 repl = ->(prompt){
   print prompt
-  handle_input(gets.chomp!)
+  all_text = ''
+  while (text = gets) != "\n"
+    all_text << text
+  end
+  handle_input(all_text)
 }
 
 # sq_definition = "(define sq(lambda(x) (* x x)))"
