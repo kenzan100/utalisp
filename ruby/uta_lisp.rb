@@ -56,15 +56,24 @@ class UtaLisp
       return v
     else
       binding_name = x[0]
-      user_definitions = []
-      File.open('user_definition.txt', 'r') do |file|
-        user_definitions = file.readlines
-      end
-      user_definitions.detect{|l| l =~ /#{binding_name}/ }
+      rambda = user_definition(binding_name)
       expressions = x.map{ |expr| eval(expr,env) }
       procedure = expressions.shift
-      procedure.call(*expressions)
+      if rambda.nil?
+        procedure.call(*expressions)
+      else
+        rambda.call(*expressions)
+      end
     end
+  end
+
+  def user_definition(binding_name)
+    user_definitions = []
+    File.open('user_definition.txt', 'r') do |file|
+      user_definitions = file.readlines
+    end
+    lambda_def = user_definitions.reverse.detect{|l| l =~ /#{binding_name}/ } rescue nil
+    eval(parse(lambda_def)[2]) if lambda_def
   end
 
   def parse(s)

@@ -4,6 +4,11 @@ require_relative 'uta_lisp'
 def handle_input(input)
   result = @ul.eval(@ul.parse(input))
   puts("=> #{result}")
+  user_definitions = []
+  File.open('user_definition.txt', 'r') do |file|
+    user_definitions = file.readlines
+  end
+  puts user_definitions
 rescue StandardError => e
   print "An error occured. Here's the Ruby stack trace:\n"
   puts e
@@ -20,8 +25,8 @@ repl = ->(prompt){
   handle_input(gets.chomp!)
 }
 
-sq_definition = "(define sq(lambda(x) (* x x)))"
-handle_input(sq_definition)
+# sq_definition = "(define sq(lambda(x) (* x x)))"
+# handle_input(sq_definition)
 
 loop do
   repl[">> "]
