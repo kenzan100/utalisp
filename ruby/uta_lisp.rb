@@ -6,7 +6,7 @@ class UtaLisp
     @global_env = add_globals(LispEnvironment.new)
   end
 
-  def eval(x, env=@global_env)
+  def eval(x, env=@global_env, pos=nil)
     if x.is_a?(String)
       return env.find_env(x)[x] if env.find_env(x)
     end
@@ -43,10 +43,13 @@ class UtaLisp
       var_in_env = env.find_env(x[1])[x[1]] if env.find_env(x[1])
       var_in_env = eval(x[2],env)
     when 'define'
-      env[x[1]] = eval(x[2],env)
+      pos = 0
+      File.open('user_definition.txt', 'a+'){|f| binding.pry; pos = f.pos; f.print "#{x}\n" }
+      env[x[1]] = eval(x[2],env,pos)
     when 'lambda'
       _, vars, exp = x
-      lambda{ |*args| eval(exp, LispEnvironment.new(vars,args,env))}
+      pos ||= nil
+      lambda{ |*args| eval(exp, LispEnvironment.new(vars,args,env),pos)}
     when 'begin'
       v = nil
       x[1..-1].each do |expr|

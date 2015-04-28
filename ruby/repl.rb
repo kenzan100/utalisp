@@ -15,10 +15,13 @@ trap "SIGINT" do
   exit 130
 end
 
-repl = -> prompt do
+repl = ->(prompt){
   print prompt
   handle_input(gets.chomp!)
-end
+}
+
+sq_definition = "(define sq(lambda(x) (* x x)))"
+handle_input(sq_definition)
 
 loop do
   repl[">> "]
