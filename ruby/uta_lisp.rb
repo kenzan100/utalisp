@@ -7,6 +7,9 @@ class UtaLisp
   end
 
   def eval(x, env=@global_env)
+
+    p x
+
     if x.is_a?(String)
       return env.find_env(x)[x] if env.find_env(x)
     end
@@ -32,7 +35,7 @@ class UtaLisp
       [eval(x[1],env)] + [eval(x[2],env)]
     when 'cond'
       x[1..-1].each do |condition, exp|
-        return eval(condition,env) if eval(exp,env)
+        return eval(exp,env) if eval(condition,env)
       end
     when 'null?'
       eval(x[1],env) == []
