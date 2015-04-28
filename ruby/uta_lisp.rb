@@ -72,7 +72,9 @@ class UtaLisp
     File.open('user_definition.txt', 'r') do |file|
       user_definitions = file.readlines
     end
-    lambda_def = user_definitions.reverse.detect{|l| l =~ /#{binding_name}/ } rescue nil
+    lambda_def = user_definitions.reverse.detect do |l|
+      parse(l)[1] == binding_name
+    end rescue nil
     eval(parse(lambda_def)[2]) if lambda_def
   end
 
