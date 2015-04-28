@@ -6,7 +6,7 @@ class UtaLisp
     @global_env = add_globals(LispEnvironment.new)
   end
 
-  def eval(x, env=@global_env, pos=nil)
+  def eval(x, env=@global_env)
     if x.is_a?(String)
       return env.find_env(x)[x] if env.find_env(x)
     end
@@ -43,13 +43,11 @@ class UtaLisp
       var_in_env = env.find_env(x[1])[x[1]] if env.find_env(x[1])
       var_in_env = eval(x[2],env)
     when 'define'
-      pos = 0
-      File.open('user_definition.txt', 'a+'){|f| binding.pry; pos = f.pos; f.print "#{x}\n" }
-      env[x[1]] = eval(x[2],env,pos)
+      File.open('user_definition.txt', 'a+'){|f| f.print "#{to_s(x)}\n" }
+      env[x[1]] = eval(x[2],env)
     when 'lambda'
       _, vars, exp = x
-      pos ||= nil
-      lambda{ |*args| eval(exp, LispEnvironment.new(vars,args,env),pos)}
+      lambda{ |*args| eval(exp, LispEnvironment.new(vars,args,env))}
     when 'begin'
       v = nil
       x[1..-1].each do |expr|
@@ -57,6 +55,12 @@ class UtaLisp
       end
       return v
     else
+      binding_name = x[0]
+      user_definitions = []
+      File.open('user_definition.txt', 'r') do |file|
+        user_definitions = file.readlines
+      end
+      user_definitions.detect{|l| l =~ /#{binding_name}/ }
       expressions = x.map{ |expr| eval(expr,env) }
       procedure = expressions.shift
       procedure.call(*expressions)
@@ -65,6 +69,11 @@ class UtaLisp
 
   def parse(s)
     read_from(tokenize(s))
+  end
+
+  def to_s(tokenized)
+    return tokenized.to_s unless tokenized.is_a?(Array)
+    '(' + tokenized.map{|token| to_s(token)}.join(' ') + ')'
   end
 
   private
