@@ -1,11 +1,14 @@
+require 'readline'
 require_relative 'uta_lisp'
+
+# you could pass in definition file path and debug mode option
 @ul = UtaLisp.new
 
 def handle_input(input)
   result = @ul.eval(@ul.parse(input))
-  puts("=> #{result}")
+  puts("=> #{@ul.to_s(result)}")
   user_definitions = []
-  File.open('user_definition.txt', 'r') do |file|
+  File.open(@ul.definition_path, 'r') do |file|
     user_definitions = file.readlines
   end
   puts user_definitions
@@ -20,18 +23,16 @@ trap "SIGINT" do
   exit 130
 end
 
+Readline.completion_proc = ->(s){ print "\t" }
+
 repl = ->(prompt){
-  print prompt
   all_text = ''
-  while (text = gets) != "\n"
+  while (text = Readline.readline(prompt,true)) != ""
     all_text << text
   end
   handle_input(all_text)
 }
 
-# sq_definition = "(define sq(lambda(x) (* x x)))"
-# handle_input(sq_definition)
-
 loop do
-  repl[">> "]
+  repl.(">> ")
 end
