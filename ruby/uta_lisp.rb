@@ -2,13 +2,17 @@ require 'byebug'
 require_relative 'lisp_environment'
 
 class UtaLisp
-  def initialize
+  attr_reader :definition_path
+
+  def initialize(definition_path='user_definition.txt', debug_mode=false)
+    @debug_mode = debug_mode
+    @definition_path = definition_path || 'user_definition.txt'
     @global_env = add_globals(LispEnvironment.new)
   end
 
   def eval(x, env=@global_env)
 
-    p x
+    p x if @debug_mode
 
     if x.is_a?(String)
       return env.find_env(x)[x] if env.find_env(x)
@@ -32,7 +36,7 @@ class UtaLisp
       _first, *rest = eval(x[1], env)
       rest
     when 'cons'
-      [eval(x[1],env)] + [eval(x[2],env)]
+      [eval(x[1],env)] + eval(x[2],env)
     when 'cond'
       x[1..-1].each do |condition, exp|
         return eval(exp,env) if eval(condition,env)
@@ -46,7 +50,7 @@ class UtaLisp
       var_in_env = env.find_env(x[1])[x[1]] if env.find_env(x[1])
       var_in_env = eval(x[2],env)
     when 'define'
-      File.open('user_definition.txt', 'a+'){|f| f.print "#{to_s(x)}\n" }
+      File.open(@definition_path, 'a+'){|f| f.print "#{to_s(x)}\n" }
       env[x[1]] = eval(x[2],env)
     when 'lambda'
       _, vars, exp = x
@@ -72,7 +76,7 @@ class UtaLisp
 
   def user_definition(binding_name)
     user_definitions = []
-    File.open('user_definition.txt', 'r') do |file|
+    File.open(@definition_path, 'r') do |file|
       user_definitions = file.readlines
     end
     lambda_def = user_definitions.reverse.detect do |l|
