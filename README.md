@@ -12,6 +12,6 @@ In your terminal, go to ruby directory. There, type `ruby repl.rb` to run REPL e
 Right now, it detects the end of function by a blank line, so make sure to provide a blank line when you finish typing in REPL.
 
 ## Why I'm making this
-Having enjoyed reading through [The Little Schemer](http://mitpress.mit.edu/books/little-schemer), I wanted to exercise my knowledge on re-reading the book with my interpreter.
+Having enjoyed reading through [The Little Schemer](http://mitpress.mit.edu/books/little-schemer), I wanted to exercise my knowledge through re-reading the book with my interpreter.
 
 During this process, I felt you're motivated more when there's a constant reminder of your progress. So, that's when I decided to tweak this.
