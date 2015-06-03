@@ -62,14 +62,14 @@ class UtaLisp
       end
       return v
     else
-      binding_name = x[0]
-      rambda = user_definition(binding_name)
       expressions = x.map{ |expr| eval(expr,env) }
       procedure = expressions.shift
-      if rambda.nil?
-        procedure.call(*expressions)
-      else
+      binding_name = x[0]
+      rambda = user_definition(binding_name)
+      if rambda
         rambda.call(*expressions)
+      else
+        procedure.call(*expressions)
       end
     end
   end
